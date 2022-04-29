@@ -42,7 +42,7 @@ def main():
     apod_info_dictt = get_apod_info(apod_date)
     
     # Download today's APOD
-    image_url = apod_info_dictt(apod_date)
+    image_url = apod_info_dictt[apod_date]
     image_msg = download_apod_image(image_url)
     image_sha256 = sha256(image_msg.content).hexdigest()
     image_size = len(image_msg.content)
