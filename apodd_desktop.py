@@ -20,6 +20,9 @@ from sys import argv, exit
 from datetime import datetime, date
 from hashlib import sha256
 from os import path
+import sqlite3
+import os
+import nasapy
 
 def main():
 
@@ -34,13 +37,13 @@ def main():
     create_image_db(db_path)
 
     # Get info for the APOD
-    apod_info_dict = get_apod_info(apod_date)
+    apod_info_dictt = get_apod_info(apod_date)
     
     # Download today's APOD
-    image_url = "https://apod.nasa.gov/apod/astropix.html"
+    image_url = apod_info_dictt(apod_date)
     image_msg = download_apod_image(image_url)
-    image_sha256 = "TODO"
-    image_size = -1 # TODO
+    image_sha256 = sha256(image_msg.content).hexdigest()
+    image_size = len(image_msg.content)
     image_path = get_image_path(image_url, image_dir_path)
 
     # Print APOD image information
@@ -61,6 +64,13 @@ def get_image_dir_path():
 
     :returns: Path of directory in which images are saved locally
     """
+      
+    #os.path checks that the directory exist
+    dir_path= os.path.join('NASA Images')
+   # makes a directory named image whether or not the image is downloaded.
+    if not os.path.isdir(dir_path):
+        os.makedirs(dir_path)
+
     if len(argv) >= 2:
         dir_path = argv[1]
         if path.isdir(dir_path):
@@ -79,7 +89,9 @@ def get_apod_date():
     Aborts script execution if date format is invalid.
 
     :returns: APOD date as a string in 'YYYY-MM-DD' format
-    """    
+    """ 
+    date = datetime.today().strftime('%Y-%m-%d')
+     
     if len(argv) >= 3:
         # Date parameter has been provided, so get it
         apod_date = argv[2]
@@ -115,7 +127,11 @@ def get_apod_info(date):
 
     :param date: APOD date formatted as YYYY-MM-DD
     :returns: Dictionary of APOD info
-    """    
+    """   
+    apod_info = nasapy.Nasa(key="523p5hPYHGzafYGLCkqa54kKMTV2vbP0XcPxkcLm")
+
+
+
     return {"todo" : "TODO"}
 
 def print_apod_info(image_url, image_path, image_size, image_sha256):
@@ -157,19 +173,7 @@ def create_image_db(db_path):
     :param db_path: Path of .db file
     :returns: None
     """
-    return #TODO
 
-def add_image_to_db(db_path, image_path, image_size, image_sha256):
-    """
-    Adds a specified APOD image to the DB.
-
-    :param db_path: Path of .db file
-    :param image_path: Path of the image file saved locally
-    :param image_size: Size of image in bytes
-    :param image_sha256: SHA-256 of image
-    :returns: None
-    """
-    return #TODO
 
 def image_already_in_db(db_path, image_sha256):
     """
@@ -180,7 +184,20 @@ def image_already_in_db(db_path, image_sha256):
     :param image_sha256: SHA-256 of image
     :returns: True if image is already in DB; False otherwise
     """ 
-    return True #TODO
+    db_cxn = sqlite3.connect(db_path)
+    db_cursor = db_cxn.cursor()
+
+    db_cursor.execute("select if FROM Images")
+    query_results = db_cursor.fetchall()
+    db_cxn.close()
+
+
+    if len(query_results) > 0:
+        print("Image is already in cache")
+        return True 
+    else:
+        print("New img not in cache")
+        return False
 
 def set_desktop_background_image(image_path):
     """

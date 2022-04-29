@@ -1,2 +1,15 @@
-started
 10 april ( sunday)
+-started a final project and copied script from d2l and put in github
+
+16 april
+- tried to complete function of github
+- getting apod info
+
+26 april
+-created database of image
+-created image directory path and image sha256
+
+28 april
+
+
+
