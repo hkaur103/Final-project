@@ -22,7 +22,9 @@ from hashlib import sha256
 from os import path
 import sqlite3
 import os
-import nasapy
+import json
+import ctypes
+import requests
 
 def main():
 
@@ -90,7 +92,7 @@ def get_apod_date():
 
     :returns: APOD date as a string in 'YYYY-MM-DD' format
     """ 
-    date = datetime.today().strftime('%Y-%m-%d')
+    apod_date = datetime.today().strftime('%Y-%m-%d')
      
     if len(argv) >= 3:
         # Date parameter has been provided, so get it
@@ -98,7 +100,7 @@ def get_apod_date():
 
         # Validate the date parameter format
         try:
-            datetime.strptime(apod_date, '%Y-%m-%d')
+            apod_date = datetime.strptime(apod_date, '%Y-%m-%d')
         except ValueError:
             print('Error: Incorrect date format; Should be YYYY-MM-DD')
             exit('Script execution aborted')
@@ -118,6 +120,8 @@ def get_image_path(image_url, dir_path):
     :param dir_path: Path of directory in which image is saved locally
     :returns: Path at which image is saved locally
     """
+    image_path = get_image_dir_path["title"]+".png"
+    
     return "TODO"
 
 def get_apod_info(date):
@@ -128,11 +132,16 @@ def get_apod_info(date):
     :param date: APOD date formatted as YYYY-MM-DD
     :returns: Dictionary of APOD info
     """   
-    apod_info = nasapy.Nasa(key="523p5hPYHGzafYGLCkqa54kKMTV2vbP0XcPxkcLm")
-
-
-
-    return {"todo" : "TODO"}
+    Image_url = ("https://api.nasa.gov/planetary/apod?api_key=yUk0bektwbRHmGt3rsaA023MSJ5yCddkKmcAFN1U")
+    apod_info = requests.get(Image_url, params={"date":datetime.today().strftime('%Y-%m-%d')})
+    if apod_info.status_code == 200:
+        try: 
+            print("Succesfull to get info...")
+            body = apod_info.content
+            body = json.loads(body)
+            return body
+        except:
+            return None
 
 def print_apod_info(image_url, image_path, image_size, image_sha256):
     """
@@ -143,7 +152,11 @@ def print_apod_info(image_url, image_path, image_size, image_sha256):
     :param image_size: Size of image in bytes
     :param image_sha256: SHA-256 of image
     :returns: None
-    """    
+    """ 
+    print(image_url)
+    print(image_path) 
+    print(image_size + image_sha256)
+     
     return #TODO
 
 def download_apod_image(image_url):
@@ -153,7 +166,23 @@ def download_apod_image(image_url):
     :param image_url: URL of image
     :returns: Response message that contains image data
     """
-    return "TODO"
+    if os.path.isfile(path):
+            return path
+
+    resp_msg = requests.get(image_url)
+    if resp_msg.status_code == 200:
+        try:
+            # getting response of image 
+            img_data = resp_msg.content
+            # here open returns an object of image path
+            with open(path, 'wb') as fp:
+                fp.write(img_data)
+                return path
+        except:
+                return
+       
+
+    
 
 def save_image_file(image_msg, image_path):
     """
@@ -164,9 +193,71 @@ def save_image_file(image_msg, image_path):
     :param image_path: Path to save image file
     :returns: None
     """
-    return #TODO
+    with open(image_path, 'wb') as fp:
+        print("Save image")
+        fp.write(image_msg)
+    return #
 
 def create_image_db(db_path):
+    myConnection = sqlite3.connect('Image_Database.db')
+
+
+    myCursor = myConnection.cursor()
+
+#Let's define the SQL Query we will use to create our first table:
+    createImageTable = """ CREATE TABLE IF NOT EXISTS people (
+                          Date text NOT NULL,
+                          Time text NOT NULL
+                        
+                        );"""
+
+    myCursor.execute(createImageTable)
+
+
+    myConnection.commit()
+
+
+    myConnection.close()                     
+    #return #TODO
+
+def add_image_to_db(db_path, image_path, image_size, image_sha256):
+    """
+    Adds a specified APOD image to the DB.
+
+    :param db_path: Path of .db file
+    :param image_path: Path of the image file saved locally
+    :param image_size: Size of image in bytes
+    :param image_sha256: SHA-256 of image
+    :returns: None
+    """
+    myConnection = sqlite3.connect('Image_Database.db')
+
+
+    myCursor = myConnection.cursor()
+
+    db_Query = """INSERT INTO people ( 
+                      Date, 
+                      Time)
+                      VALUES (?, ?)"""
+    db = ("apod_data",
+                      
+          datetime.now(), 
+            
+          None)       
+          
+    myCursor.execute(db_Query, db)
+
+
+    myCursor.execute("SELECT group_concat(name, ', ') FROM pragma_table_info('people')")
+    print(myCursor.fetchone())
+
+
+    myConnection.commit()
+
+
+    myConnection.close()              
+    return #TODO
+
     """
     Creates an image database if it doesn't already exist.
 
@@ -206,6 +297,12 @@ def set_desktop_background_image(image_path):
     :param image_path: Path of image file
     :returns: None
     """
+    try:
+        ctypes.windll.user32.SystemParametersInfoW(20, 0, path, 0)
+    except:
+        print("Eroor setting dsktp bckgrnd img")
+
+
     return #TODO
 
 main()

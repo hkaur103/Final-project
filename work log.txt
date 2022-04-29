@@ -6,10 +6,16 @@
 - getting apod info
 
 26 april
--created database of image
+-created database of image but some syntax error 
 -created image directory path and image sha256
 
+
 28 april
+- downloading the image data but confused in saving
+- fetching data from nasa 
 
 
-
+29 april
+- adding image to database
+- setting dekstop image 
+- 
